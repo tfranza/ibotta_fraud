@@ -1,0 +1,25 @@
+select * 
+from `trans` tr
+join `account` ac on ac.account_id = tr.account_id
+join `loan` l on ac.account_id = l.account_id
+
+select * 
+from `order` o
+join `account` ac on ac.account_id = o.account_id
+join `loan` l on ac.account_id = l.account_id
+
+select * 
+from `card` c
+join `disp` d on c.disp_id = d.disp_id
+join `account` ac on ac.account_id = d.account_id
+join `loan` l on l.account_id = ac.account_id
+
+select * 
+from `client` c
+join `disp` d on c.disp_id = d.disp_id
+join `account` ac on ac.account_id = d.account_id
+join `district` dis on dis.district_id = ac.district_id
+join `loan` l on l.account_id = ac.account_id
+
+
+

@@ -1,0 +1,9 @@
+how to download the dataset
+
+1. Open your favourite MariaDB client
+2. Use following credentials:
+	+ hostname: relational.fit.cvut.cz
+	+ port: 3306
+	+ username: guest
+	+ password: relational
+3. Export "financial" database (or other version of the dataset, if available) in your favourite format (e.g. CSV or SQL dump).
