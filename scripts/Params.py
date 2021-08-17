@@ -2,6 +2,11 @@
 from enum import Enum
 
 class Params(Enum):
+    '''
+    Stores all parameters and other otherwise-hardcoded variables into one single class.
+    
+    '''
+
     TYPES = {
         'PRIJEM': 'Credit', 
         'VYDAJ': 'Withdrawal', 
