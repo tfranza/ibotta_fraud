@@ -1,5 +1,6 @@
 import pandas as pd
 import pickle
+import seaborn as sns
 
 import Params
 
@@ -7,6 +8,7 @@ class Cleaner():
     '''
     Provides methods operating on fields to polish the raw data from the Berka dataset. Gets exploited 
     during the training step as well as to preprocess new incoming data. 
+
     '''
 
     def __init__(self, df: pd.DataFrame):
@@ -22,7 +24,7 @@ class Cleaner():
     def clean_fields(self):
         '''
         Calls the cleaning operations made available with the class in a sequential way. This specific 
-        sequence is currently considered as default for the cleaning step.
+        sequence is currently considered as default for this step.
 
         '''
         self.clean_date_field()
@@ -33,7 +35,7 @@ class Cleaner():
         self.clean_account_field()
 
     #################################################################################################
-    ## CLEANERS
+    ## CLEANING METHODS
 
     def clean_date_field(self):
         '''
