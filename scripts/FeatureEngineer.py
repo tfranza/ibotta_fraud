@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pickle
 
@@ -31,21 +32,29 @@ class FeatureEngineer():
         saves it on the file system.
     
         :param seq_lens: list of lengths for sequences to be generated.
-
-        '''
-        self.apply_pearson_correlation()
         
-        trans_seqs = [self.apply_z_score_normalization(self.df)]
+        '''
+        self.df = self.apply_pearson_correlation()
 
+        self.df = self.df.drop(columns=['account_id', 'date'])
+        one_length_sequence = self.apply_z_score_normalization(self.df)
+        self.df = pd.DataFrame(one_length_sequence, index=self.df.index, columns=self.df.columns)
+        
+        trans_seqs = [one_length_sequence]
         for seq_len in seq_lens:
             sequence = self.get_transaction_sequences(seq_len)
             sequence = self.apply_z_score_normalization(sequence)
             trans_seq.append(sequence)
         seq_lens = [1] + seq_lens
-
-        [self.get_umap_visualization(sequence, slice = 100000) for seq_len in seq_lens]
-
-
+        
+        for seq_len, trans_seq in zip(seq_lens, trans_seqs):
+            self.get_umap_visualization (
+                df = trans_seq,
+                seq_len = seq_len,
+                slice_size = 100000
+            )
+        
+    
     #################################################################################################
     ## FEATURE ENGINEERING METHODS
 
@@ -67,10 +76,8 @@ class FeatureEngineer():
                 if np.abs(cor.iloc[i,j]) >= threshold:
                     if j in keep_columns:
                         drop_columns.append(j)
-
-        self.df = self.df.drop(columns=drop_columns)
-
-        return drop_columns
+        
+        return self.df.drop(columns=df_small.columns[drop_columns])
 
 
     def get_transaction_sequences(self, seq_len: int = 2):
@@ -79,6 +86,8 @@ class FeatureEngineer():
         generates them.
 
         :param seq_len: number of transactions concatenated in a single sequence.
+        
+        :returns: the transaction sequences
 
         '''
         try:
@@ -95,6 +104,8 @@ class FeatureEngineer():
         Account ids and dates get removed after this operation.
 
         :param seq_len: number of transactions concatenated in a single sequence.
+
+        :returns: the built sequences of transactions
 
         '''
 
@@ -132,7 +143,7 @@ class FeatureEngineer():
             
         return sequences
 
-    def apply_z_score_normalization(df):
+    def apply_z_score_normalization(self, df):
         '''
         Applies feature scaling using the Z score normalization on the dataframe: subtracts the mean, 
         divides with standard deviation.
@@ -152,13 +163,14 @@ class FeatureEngineer():
         :param slice_size: amount of transactions to slice the original dataframe with. 
 
         '''
-        if slice != -1:
-            df = df[:slice,:]
+
+        if slice_size != -1:
+            df = df[:slice_size,:]
 
         # generating umap representations and saving them
         umap_trans_df = umap.UMAP().fit_transform(df)
-        with open('crafted/umap_{}trans.pickle'.format(seq_len), 'wb') as handle:
-            pickle.dump(sequences, handle, protocol=pickle.HIGHEST_PROTOCOL)        
+        with open('../data/data_analysis/crafted/umap_{}trans.pickle'.format(seq_len), 'wb') as handle:
+            pickle.dump(umap_trans_df, handle, protocol=pickle.HIGHEST_PROTOCOL)        
 
         # generating the umap plot
         plt.figure(figsize=(16,10))
@@ -176,5 +188,22 @@ class FeatureEngineer():
         # saving the umap plot
         filepath = '../data/data_analysis/crafted/'
         filename = 'umap_{}trans_plot.png'
-        plt.savefig(filepath + filename.format(slice))
+        plt.savefig(filepath + filename.format(seq_len))
         
+    def save_engineered_df(self, path: str ='../data/data_analysis/crafted/', filename: str ='df_engineered'):
+        '''
+        Encodes the engineered dataframe as a bytes object and saves it in the file system according to the given 
+        filename and path.
+
+        :param path: location path of the object to be stored.
+        :param filename: filename of the object to be stored.
+
+        '''
+        filepath = '{}{}.pickle'.format(path, filename)
+        try:
+            with open(filepath, 'wb') as handle:
+                pickle.dump(self.df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            print('Feature engineered dataframe saved successfully!')
+        except:
+            print('Issue meanwhile trying to save the engineered dataframe...')
+

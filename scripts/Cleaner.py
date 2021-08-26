@@ -47,6 +47,9 @@ class Cleaner():
 
         The original date column is kept to make time comparisons between transactions easier - might get used
         into the feature engineering step.
+        
+        :param df: dataframe to be cleaned
+        :returns: the cleaned dataframe over the date field
 
         '''
         field_name = 'date'
@@ -94,6 +97,9 @@ class Cleaner():
         Improves the readability of the 'type' field labels (by translating them) and transforms the extracted 
         features into multilabel one-hot columns. Then drops the original 'type' field.
 
+        :param df: dataframe to be cleaned
+        :returns: the cleaned dataframe over the type field
+
         '''
         field_name = 'type'
 
@@ -118,6 +124,9 @@ class Cleaner():
         Improves the readability of the 'operation' field labels (by translating them) and transforms the extracted 
         features into one-hot columns. Then drops the original 'operation' field.
 
+        :param df: dataframe to be cleaned
+        :returns: the cleaned dataframe over the operation field
+
         '''
         field_name = 'operation'
 
@@ -141,6 +150,9 @@ class Cleaner():
         Improves the readability of the 'k_symbol' field labels (by translating them) and transforms the extracted 
         features into one-hot columns. Then drops the original 'k_symbol' field.
 
+        :param df: dataframe to be cleaned
+        :returns: the cleaned dataframe over the ksymbol field
+
         '''
         field_name = 'k_symbol'
 
@@ -163,6 +175,9 @@ class Cleaner():
         '''
         Drops the 'bank' field as soon as there are too few infos about this field, as shown in data analysis. 
 
+        :param df: dataframe to be cleaned
+        :returns: the cleaned dataframe over the bank field
+
         '''
         field_name = 'bank'
 
@@ -172,6 +187,9 @@ class Cleaner():
     def clean_account_field(self, df):
         '''
         Drops the 'account' field as soon as there are too few infos about this field, as shown in data analysis.  
+
+        :param df: dataframe to be cleaned
+        :returns: the cleaned dataframe over the account field
 
         '''
         field_name = 'account'
