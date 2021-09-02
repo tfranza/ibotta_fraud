@@ -1,0 +1,8 @@
+ 1) [./anomalies_analysis.ipynb]: analysis of anomalies/outlying transactions conduced on 1/10 of the dataset {NOT USEFUL}
+ 2) [./anomalies_analysis_complete_dataset.ipynb]: analysis of anomalies/outlying transactions conduced on the whole dataset. Extended analysis in terms of tried techniques with respect to the notebook 'anomalies_analysis' {CURRENT WORK}
+ 3) [./data_analysis.ipynb]: analysis over the whole database, including the other tables in addition to the transactions table {NOT USEFUL FOR CURRENT TASK}
+ 4) [./data_analysis_transactions.ipynb]: exploratory data analysis over the transactions table, cleaning of the data {PAST WORK ON CURRENT TASK - CURRENTLY ADOPTED TECHNIQUES}
+ 5) [./feature_selection.ipynb]: feature engineering over the cleaned data {PAST WORK ON CURRENT TASK - CURRENTLY ADOPTED TECHNIQUES}
+ 6) [./model_selection.ipynb]: model selection and application over the engineered data {PAST WORK ON CURRENT TASK - CURRENTLY ADOPTED TECHNIQUES}
+ 7) [./splitting_transaction_types.ipynb]: recent attempt in separate analysis of the different transaction types {ANALYSIS OVER THIS IN PAUSE}
+ 8) [../database_esploration/database_exploration.ipynb]: very high-level database analysis and printing of basic statistics, first superficial exploring attempt {NOT USEFUL FOR CURRENT TASK} 
