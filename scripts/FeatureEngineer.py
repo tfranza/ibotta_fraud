@@ -2,7 +2,13 @@ import numpy as np
 import pandas as pd
 import pickle
 
-import Params
+from sklearn.preprocessing import StandardScaler
+import umap.umap_ as umap
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+import scripts.Params
 
 class FeatureEngineer():
     '''
@@ -20,6 +26,7 @@ class FeatureEngineer():
         '''
         super(FeatureEngineer, self).__init__()
         self.df = df.copy(deep=True)
+        self.engineered_data = []
 
 
     def feature_engineer_data(self, seq_lens = []):
@@ -34,6 +41,11 @@ class FeatureEngineer():
         :param seq_lens: list of lengths for sequences to be generated.
         
         '''
+        print()
+        print('###########################################')
+        print(' Step 2: Feature engineering data')
+        print()
+
         self.df = self.apply_pearson_correlation()
 
         self.df = self.df.drop(columns=['account_id', 'date'])
@@ -66,6 +78,8 @@ class FeatureEngineer():
         :param threshold: features correlated higher than this threshold will be removed (one of them).
 
         '''
+        print('> Applying pearson correlation coefficient...')
+
         df_small = self.df.drop(columns=['account_id', 'date'])
         cor = df_small.corr(method='pearson')
 
@@ -93,7 +107,9 @@ class FeatureEngineer():
         try:
             with open('crafted/sequences_{}trans.pickle'.format(seq_len), 'rb') as handle:
                 return pickle.load(handle)
+            print('> Loading transaction sequences...')
         except:
+            print('> Generating transaction sequences...')
             return build_transaction_sequences(seq_len)
 
 
@@ -138,9 +154,10 @@ class FeatureEngineer():
             if (col.endswith('date') or col.endswith('account_id'))
         ])
         
-        with open('crafted/sequences_{}trans.pickle'.format(slice_size), 'wb') as handle:
+        with open('./data/data_analysis/crafted/sequences_{}trans.pickle'.format(slice_size), 'wb') as handle:
             pickle.dump(sequences, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            
+        
+        self.engineered_data.append(zip(seq_len, sequences))
         return sequences
 
     def apply_z_score_normalization(self, df):
@@ -163,13 +180,14 @@ class FeatureEngineer():
         :param slice_size: amount of transactions to slice the original dataframe with. 
 
         '''
-
+        print('> Generating umap downsampled data for visualization...')
+        
         if slice_size != -1:
             df = df[:slice_size,:]
 
         # generating umap representations and saving them
         umap_trans_df = umap.UMAP().fit_transform(df)
-        with open('../data/data_analysis/crafted/umap_{}trans.pickle'.format(seq_len), 'wb') as handle:
+        with open('./data/data_analysis/crafted/umap_{}trans.pickle'.format(seq_len), 'wb') as handle:
             pickle.dump(umap_trans_df, handle, protocol=pickle.HIGHEST_PROTOCOL)        
 
         # generating the umap plot
@@ -186,24 +204,24 @@ class FeatureEngineer():
         )
 
         # saving the umap plot
-        filepath = '../data/data_analysis/crafted/'
-        filename = 'umap_{}trans_plot.png'
-        plt.savefig(filepath + filename.format(seq_len))
+        filepath = './data/data_analysis/crafted/'
+        filename = f'umap_{seq_len}trans_plot.png'
+        plt.savefig(filepath + filename)
         
-    def save_engineered_df(self, path: str ='../data/data_analysis/crafted/', filename: str ='df_engineered'):
+    def save_engineered_data(self, filepath: str ='./data/data_analysis/crafted/', filename: str ='df_engineered'):
         '''
         Encodes the engineered dataframe as a bytes object and saves it in the file system according to the given 
         filename and path.
 
-        :param path: location path of the object to be stored.
+        :param filepath: location path of the object to be stored.
         :param filename: filename of the object to be stored.
 
         '''
-        filepath = '{}{}.pickle'.format(path, filename)
+        self.engineered_data = [(1, self.df)] + self.engineered_data
         try:
-            with open(filepath, 'wb') as handle:
+            with open(f'{filepath}{filename}.pickle', 'wb') as handle:
                 pickle.dump(self.df, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            print('Feature engineered dataframe saved successfully!')
+            print('> Feature engineered dataframe saved successfully!')
         except:
-            print('Issue meanwhile trying to save the engineered dataframe...')
+            print('> Issue meanwhile trying to save the engineered dataframe...')
 

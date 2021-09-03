@@ -2,7 +2,7 @@ import pandas as pd
 import pickle
 import seaborn as sns
 
-from Params import Params
+from scripts.Params import Params
 
 class Cleaner():
     '''
@@ -27,6 +27,11 @@ class Cleaner():
         sequence is currently considered as default for this step.
 
         '''
+        print()
+        print('###########################################')
+        print(' Step 1: Cleaning dataset')
+        print()
+
         df_raw = self.df
         df_with_wrangled_dates = self.clean_date_field(df_raw)
         df_with_wrangled_types = self.clean_type_field(df_with_wrangled_dates)
@@ -53,6 +58,7 @@ class Cleaner():
 
         '''
         field_name = 'date'
+        print(f'> Cleaning {field_name}...')
 
         # extracting series of potentially interesting fields from the date
         dayofweek = df['date'].map(lambda date: date.dayofweek)
@@ -102,6 +108,7 @@ class Cleaner():
 
         '''
         field_name = 'type'
+        print(f'> Cleaning {field_name}...')
 
         # translating type names to make them better readable
         df['type'] = df['type'].map(Params.TYPES.value)
@@ -129,6 +136,7 @@ class Cleaner():
 
         '''
         field_name = 'operation'
+        print(f'> Cleaning {field_name}...')
 
         # translating operation names to make them better readable
         df['operation'] = df['operation'].map(Params.OPERATIONS.value)
@@ -155,6 +163,7 @@ class Cleaner():
 
         '''
         field_name = 'k_symbol'
+        print(f'> Cleaning {field_name}...')
 
         # translating ksymbol names to make them better readable
         df['k_symbol'] = df['k_symbol'].map(Params.KSYMBOLS.value)
@@ -180,6 +189,7 @@ class Cleaner():
 
         '''
         field_name = 'bank'
+        print(f'> Cleaning {field_name}...')
 
         return df.drop(columns=[field_name])		# too few infos about this field
 
@@ -193,27 +203,27 @@ class Cleaner():
 
         '''
         field_name = 'account'
+        print(f'> Cleaning {field_name}...')
 
         return df.drop(columns=[field_name])		# too few infos about this field
 
     #################################################################################################
     ## UTILITIES
 
-    def save_cleaned_df(self, path: str ='../data/data_analysis/crafted/', filename: str ='df_cleaned'):
+    def save_cleaned_df(self, filepath: str ='./data/data_analysis/crafted/', filename: str ='df_cleaned'):
         '''
         Encodes the cleaned dataframe as a bytes object and saves it in the file system according to the given 
         filename and path.
 
-        :param path: location path of the object to be stored.
+        :param filepath: location path of the object to be stored.
         :param filename: filename of the object to be stored.
 
         '''
-        filepath = '{}{}.pickle'.format(path, filename)
         try:
-            with open(filepath, 'wb') as handle:
+            with open(f'{filepath}{filename}.pickle', 'wb') as handle:
                 pickle.dump(self.df, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            print('Cleaned dataframe saved successfully!')
+            print('> Cleaned dataframe saved successfully!')
         except:
-            print('Issue meanwhile trying to save the cleaned dataframe...')
+            print('> Issue meanwhile trying to save the cleaned dataframe...')
 
     #################################################################################################
