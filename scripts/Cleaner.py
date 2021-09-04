@@ -1,8 +1,10 @@
+
 import pandas as pd
 import pickle
 import seaborn as sns
 
 from scripts.Params import Params
+
 
 class Cleaner():
     '''
@@ -11,15 +13,25 @@ class Cleaner():
 
     '''
 
-    def __init__(self, df: pd.DataFrame):
+    def __init__(self, df: pd.DataFrame, force_rebuild: bool = False):
         '''
         Constructor. Calls the superclass constructor. Creates a copy of the dataframe to be cleaned, 
         which is passed as input.
         
         :param df: dataframe to be cleaned.
+        :param force_rebuild: boolean flag to force rebuilding of artifacts instead of loading them.
+
         '''
+
         super(Cleaner, self).__init__()
         self.df = df.copy(deep=True)
+        self.force_rebuild = force_rebuild
+
+        print()
+        print('###########################################')
+        print(' Step 1: Cleaning dataset')
+        print()
+
 
     def clean_fields(self):
         '''
@@ -27,19 +39,24 @@ class Cleaner():
         sequence is currently considered as default for this step.
 
         '''
-        print()
-        print('###########################################')
-        print(' Step 1: Cleaning dataset')
-        print()
 
-        df_raw = self.df
-        df_with_wrangled_dates = self.clean_date_field(df_raw)
-        df_with_wrangled_types = self.clean_type_field(df_with_wrangled_dates)
-        df_with_wrangled_ops = self.clean_operation_field(df_with_wrangled_types)
-        df_with_wrangled_ksymb = self.clean_ksymbol_field(df_with_wrangled_ops)
-        df_with_wrangled_bank = self.clean_bank_field(df_with_wrangled_ksymb)
-        df_with_wrangled_acc = self.clean_account_field(df_with_wrangled_bank)
-        self.df = df_with_wrangled_acc
+        if self.force_rebuild:
+            self.df['date'] = pd.to_datetime(self.df['date'], format='YYYY-MM-DD')
+            self.df = self.df.sort_values(['account_id', 'date'], ascending=True)
+
+            df_raw = self.df
+            df_with_wrangled_dates = self.clean_date_field(df_raw)
+            df_with_wrangled_types = self.clean_type_field(df_with_wrangled_dates)
+            df_with_wrangled_ops = self.clean_operation_field(df_with_wrangled_types)
+            df_with_wrangled_ksymb = self.clean_ksymbol_field(df_with_wrangled_ops)
+            df_with_wrangled_bank = self.clean_bank_field(df_with_wrangled_ksymb)
+            df_with_wrangled_acc = self.clean_account_field(df_with_wrangled_bank)
+            self.df = df_with_wrangled_acc
+    
+            self.save_data(self.df, filename = 'df_cleaned')
+        else:
+            self.df = self.load_data(filename = 'df_cleaned')
+
 
     #################################################################################################
     ## CLEANING METHODS
@@ -210,20 +227,35 @@ class Cleaner():
     #################################################################################################
     ## UTILITIES
 
-    def save_cleaned_df(self, filepath: str ='./data/data_analysis/crafted/', filename: str ='df_cleaned'):
+    def save_data(self, data_object, filename: str, filepath: str = Params.OUTPUT_FILEPATH.value):
         '''
-        Encodes the cleaned dataframe as a bytes object and saves it in the file system according to the given 
-        filename and path.
-
-        :param filepath: location path of the object to be stored.
+        Encodes any dataframe or object related to the cleaning process that needs to be stored in the file 
+        system according to the given filename and filepath.
+    
+        :param data_object: object to the stored. 
         :param filename: filename of the object to be stored.
+        :param filepath: location path of the object to be stored.
 
         '''
-        try:
-            with open(f'{filepath}{filename}.pickle', 'wb') as handle:
-                pickle.dump(self.df, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            print('> Cleaned dataframe saved successfully!')
-        except:
-            print('> Issue meanwhile trying to save the cleaned dataframe...')
+        with open(f'{filepath}{filename}.pickle', 'wb') as handle:
+            pickle.dump(data_object, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        print(f'> {filename} saved successfully!')
+
+
+    def load_data(self, filename: str, filepath: str = Params.OUTPUT_FILEPATH.value):
+        '''
+        Loads encoded dataframe or object related to the engineering process and which is stored in the file 
+        system according to the given filename and filepath.
+
+        :param filename: filename of the object to be stored.
+        :param filepath: location path of the object to be stored.
+        
+        :returns: the stored object. 
+        '''
+        with open(f'{filepath}{filename}.pickle', 'rb') as handle:
+            data_object = pickle.load(handle)
+        print(f'> {filename} loaded successfully!')
+
+        return data_object
 
     #################################################################################################

@@ -7,6 +7,12 @@ class Params(Enum):
     
     '''
 
+    #--- Paths
+    OUTPUT_FILEPATH = './data/data_analysis/crafted/'
+    DATASET_FILEPATH = './data/data_analysis/'
+
+
+    #--- Translation values from Czech to English
     TYPES = {
         'PRIJEM': 'Credit', 
         'VYDAJ': 'Withdrawal', 
@@ -28,4 +34,10 @@ class Params(Enum):
         'UROK': 'Interest Credited',
         'SANKC. UROK': 'Sanction Interest'
     }
+
+
+    #--- Other options
+    ROW_SLICE_SIZE = 1000
+    CONTAMINATION = 0.03
+    RANDOM_STATE = 0
 

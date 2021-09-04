@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import pickle
 
 import eif 
@@ -9,7 +10,8 @@ from pyod.models.knn import KNN
 from pyod.models.lof import LOF
 from pyod.models.pca import PCA
 
-import scripts.Params
+from scripts.Params import Params
+
 
 class ModelSelector():
     '''
@@ -27,6 +29,11 @@ class ModelSelector():
         self.df = df.copy(deep=True)
         self.seq_len = seq_len
 
+        print()
+        print('###########################################')
+        print(' Step 3: Training model')
+        print()
+
 
     def train_model(self, model_name):
         '''
@@ -41,30 +48,27 @@ class ModelSelector():
 
         '''
 
-        print()
-        print('###########################################')
-        print(' Step 3: Training model')
-        print()
-
+        self.model_name = model_name
         self.select_model(model_name, self.df)
         self.save_model_data()
+
+    def select_model(self, model_name, data):
+        print(f'> Training {model_name}...')
+        train_model_method = getattr(self, f'train_{model_name}')
+        model, labels = train_model_method(data)
+        self.model = model
+        self.outliers, self.inliers = labels
 
 
     #################################################################################################
     ## SELECTED MODELS
 
-    def select_model(self, model_name, data):
-        print(f'> Training {model_name}')
-        train_model_method = getattr(self, f'self.train_{model_name}')
-        model, labels = train_model_method(*data)
-        self.model = model
-        self.outliers, self.inliers = labels
-
     def train_knn(self, data):
         knn_model = KNN(
-            contamination = 0.03,
+            contamination = Params.CONTAMINATION.value,
             #n_neighbors = 15,
-            method = 'median'
+            method = 'median',
+            random_state = Params.RANDOM_STATE.value
         )
         knn_model.fit(data)
         knn_outliers = np.where(knn_model.labels_ == 1)[0]
@@ -74,7 +78,8 @@ class ModelSelector():
 
     def train_local_outlier_factor(self, data):
         lof_model = LOF(
-            contamination = 0.03
+            contamination = Params.CONTAMINATION.value,
+            random_state = Params.RANDOM_STATE.value
         )
         lof_model.fit(data)
         lof_outliers = np.where(lof_model.labels_ == 1)[0]
@@ -84,9 +89,9 @@ class ModelSelector():
 
     def train_pca(self, data):
         pca_model = PCA(
-            contamination = 0.1,
+            contamination = 0.1, #Params.CONTAMINATION.value,
             whiten = True,
-            random_state = 0
+            random_state = Params.RANDOM_STATE.value
         )
         pca_model.fit(data)
         pca_outliers = np.where(pca_model.labels_ == 1)[0]
@@ -99,7 +104,7 @@ class ModelSelector():
         
         self.glosh = False
         if self.glosh:
-            threshold = pd.Series(clusterer.outlier_scores_).quantile(0.966)
+            threshold = pd.Series(clusterer.outlier_scores_).quantile(1 - Params.CONTAMINATION.value)
             labels = (clusterer.outlier_scores_ > threshold).astype(int)
         else:
             labels = (clusterer.labels_ == -1).astype(int)
@@ -110,8 +115,8 @@ class ModelSelector():
 
     def train_isolation_forests(self, data):
         ifs_model = IForest(
-            contamination=0.03,
-            random_state=0
+            contamination = Params.CONTAMINATION.value,
+            random_state = Params.RANDOM_STATE.value
         )
         ifs_model.fit(data)
         ifs_outliers = np.where(ifs_model.labels_ == 1)[0]
@@ -122,12 +127,12 @@ class ModelSelector():
     def train_extended_isolation_forest(self, data):
         eif_model = eif.iForest(
             data, 
-            ntrees=200, 
-            sample_size=256, 
-            ExtensionLevel=1
+            ntrees = 200, 
+            sample_size = 256, 
+            ExtensionLevel = 1
         )
         eif_outliers_probs = eif_model.compute_paths(X_in=data)
-        n_outliers = 3000
+        n_outliers = Params.CONTAMINATION.value * Params.ROW_SLICE_SIZE.value
         
         eif_outliers = eif_outliers_probs.argsort()[-n_outliers:][::-1]
         eif_inliers = eif_outliers_probs.argsort()[:-n_outliers][::-1]
@@ -138,8 +143,8 @@ class ModelSelector():
         ae_model = AutoEncoder(
             hidden_neurons = [17,12,12,17],
             epochs = 15,
-            contamination = 0.1,
-            random_state = 0
+            contamination = 0.1,  # Params.CONTAMINATION.value,
+            random_state = Params.RANDOM_STATE.value
         )
         ae_model.fit(data)
         ae_outliers = np.where(ae_model.labels_ == 1)[0]
@@ -148,17 +153,20 @@ class ModelSelector():
         return ae_model, (ae_outliers, ae_inliers)
 
 
-    def save_model_data(self, filepath: str ='./data/data_analysis/crafted/', filename: str ='model_data_1trans'):
+    #################################################################################################
+    ## UTILITIES
+
+    def save_model_data(self, filepath: str = Params.OUTPUT_FILEPATH.value, filename: str ='model_data_1trans'):
         '''
         Encodes the data related to the model, including the metadata about the model name, the model itself, 
         the outliers and inliers identified with it
-
+    
         :param filepath: location path of the object to be stored.
         :param filename: filename of the object to be stored.
 
         '''
         model_data = {
-            'model_name': model_name,
+            'model_name': self.model_name,
             'model': self.model,
             'outliers': self.outliers,
             'inliers': self.inliers
@@ -167,7 +175,11 @@ class ModelSelector():
         try:
             with open(f'{filepath}{filename}.pickle', 'wb') as handle:
                 pickle.dump(model_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            filepath = '{}{}.pickle'.format(path, filename)
             print('> Model data saved successfully!')
         except:
             print('> Issue meanwhile trying to save the model data...')
+
+    #################################################################################################
+
+
+
