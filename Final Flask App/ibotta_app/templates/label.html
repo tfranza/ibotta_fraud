@@ -1,0 +1,28 @@
+<br>
+<center>
+  <h1>Financial Fraud Detection - Ibotta</h1>
+</center>
+<br>
+<br>
+<center>
+   <p> <font size="+2"> Label = 1 for fraudulent transaction </font>></p>
+   <p> <font size="+2"> Label = 0 for normal transaction </font>></p>
+   </center>>
+<center>
+    <body>
+    {{ username }}
+    <form id='change' action='/change' method='post'>
+    <fieldset >
+    <input type='hidden' name='submitted' id='submitted' value='1'/>
+    <label for='Transaction_id'><b> <font size="+2"> Transaction_id </font></b></label> 
+    <input type='text' name='transaction_id' id='transaction_id' maxlength="50" /> <br>
+    <br>
+    <label for='label'> <b> <font size="+2"> Label </font></b></label>
+    <input type='text' name='label' id='label' maxlength="50" />
+    <br>
+    <br>
+    <input type='submit' name='Submit' value='Submit' />
+    </fieldset>
+    </form>
+    </body>
+ </center>
